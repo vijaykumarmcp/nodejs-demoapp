@@ -1,10 +1,10 @@
 pipeline {
     agent any
-    def project = 'my-project' 
-    def appName = 'my-first-microservice' 
-    def serviceName = "${appName}-backend" 
-    def imageVersion = 'development' 
-    def namespace = 'development' 
+    def project = 'ci-cd-jenkins' 
+    def appName = 'nodejsapp' 
+    def serviceName = "${appName}-frontend" 
+    def imageVersion = 'prod' 
+    def namespace = 'producation' 
     def imageTag = "gcr.io/${project}/${appName}:${imageVersion}.${env.BUILD_ID}" 
     environment {
      dockerRegistry = "vjykr/docker-nodejs"
