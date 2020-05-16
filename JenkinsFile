@@ -1,15 +1,17 @@
+//variables
+def project = 'ci-cd-jenkins' 
+def appName = 'nodejsapp' 
+def serviceName = "${appName}-frontend" 
+def imageVersion = 'prod' 
+def namespace = 'production' 
+def imageTag = "gcr.io/${project}/${appName}:${imageVersion}.${env.BUILD_ID}"
 pipeline {
     agent any
-    def project = 'ci-cd-jenkins' 
-    def appName = 'nodejsapp' 
-    def serviceName = "${appName}-frontend" 
-    def imageVersion = 'prod' 
-    def namespace = 'producation' 
-    def imageTag = "gcr.io/${project}/${appName}:${imageVersion}.${env.BUILD_ID}" 
     environment {
      dockerRegistry = "vjykr/docker-nodejs"
      dockerRegistryCredential = 'dockerhub'
      dockerImage = ''
+     KUBERNETES_MASTER= 'master-node'
    }
     stages {
         
@@ -20,7 +22,7 @@ pipeline {
          }
         stage('Build') {
             steps {
-            sh 'npm install --production'
+            sh 'npm install'
             }
         }
          stage('Run Unit Test') {
@@ -47,8 +49,9 @@ pipeline {
         }
         stage ('Deploy') {
            steps {
+               script{
                 // Create namespace if it doesn't exist 
-                sh("kubectl get ns ${namespace} || kubectl create ns ${namespace} .") 
+                sh("kubectl get ns ${namespace} || kubectl create ns ${namespace} ")
 
                 //Update the imagetag to the latest version 
                 ("sed -i.bak 's#gcr.io/${project}/${appName}:${imageVersion}#${imageTag}# ./etc/kubernetes/k8s/development/*.yaml ")
@@ -59,6 +62,7 @@ pipeline {
 
                 //Grab the external Ip address of the service 
                 sh("echo http://`kubectl --namespace=${namespace} get service/${feSvcName} --output=json | jq -r .status.loadBalancer.ingress[0].ip'` > ${feSvcName} .")
+               }
            }
         }        
     }    

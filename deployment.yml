@@ -1,20 +1,22 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  labels:
+    app.kubernetes.io/name: nodejs-demo
   name: nodejsapp
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: nodejsapp
+      app.kubernetes.io/name: nodejs-demo
   template:
     metadata:
       labels:
-        app: nodejsapp
+        app.kubernetes.io/name: nodejs-demo
     spec:
       containers:
       - name: nodejsapp
         image: "vjykr/docker-nodejs"
         ports:
-        - containerPort: 3000
+        - containerPort: 8000
         imagePullPolicy: Always
