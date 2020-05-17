@@ -1,0 +1,28 @@
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: cluster-in-existing-vpc
+  region: us-east-1
+
+vpc:
+  subnets:
+    private:
+      us-east-1a: { id: subnet-bba67ef6 }
+      us-east-2b: { id: subnet-501e0b0c }
+      us-east-3c: { id: subnet-61858c06 }
+
+nodeGroups:
+  - name: ng-1-workers
+    labels: { role: workers }
+    instanceType: t2.micro
+    desiredCapacity: 3
+    privateNetworking: true
+  - name: ng-2-builders
+    labels: { role: builders }
+    instanceType: t2.medium
+    desiredCapacity: 1
+    privateNetworking: true
+    iam:
+      withAddonPolicies:
+        imageBuilder: true

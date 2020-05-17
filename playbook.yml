@@ -1,14 +1,14 @@
-- hosts: localhost
+- hosts: all
+  become: true
   tasks:
-  - name: Deploy the service
-    k8s:
-      state: present
-      definition: ""
-      validate_certs: no
-      namespace: default
-  - name: Deploy the application
-    k8s:
-      state: present
-      validate_certs: no
-      namespace: default
-      definition: ""
+  - name: create the pods and services
+    command: kubectl run nodejsapp --image=vjykr/docker-nodejs --requests=cpu=500m --expose --port=3000
+
+  - name: create the deployment
+    command: kubectl create deployment nodejsapp-deploy --image=vjykr/docker-nodejs
+
+  - name: configure autoscaling
+    command: kubectl autoscale deployment nodejsapp-deploy --cpu-percent=50 --min=1 --max=5
+
+  - name: expose the service via external public facing load balancer
+    command: kubectl expose deployment nodejsapp-deploy --type=LoadBalancer --name=external-endpoint2 --port=8001 --target-port=3000 

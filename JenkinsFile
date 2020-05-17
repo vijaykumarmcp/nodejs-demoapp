@@ -20,7 +20,7 @@ pipeline {
                 git 'https://github.com/vijaykumarmcp/nodejs-demoapp'
             }
          }
-        stage('Build') {
+        stage('Build Project') {
             steps {
             sh 'npm install'
             }
@@ -28,6 +28,11 @@ pipeline {
          stage('Run Unit Test') {
             steps {
                 sh 'npm test'
+            }
+          }
+          stage('SonarQube Analysis') {
+            steps {
+                sh '/opt/sonar-scanner/sonar-scanner-4.3.0.2102-linux/bin/sonar-scanner -Dsonar.host.url=http://localhost:9000 -Dsonar.projectKey=nodejsapp:demo -Dsonar.projectName=Nodejs-demoapp -Dsonar.projectVersion=1.0 -Dsonar.language=js -Dsonar.sources=. -Dsonar.sourceEncoding=UTF-8 -Dsonar.exclusions=/**/*.spec.js -Dsonar.test.inclusions=/**/*.spec.js -Dsonar.coverage.exclusions=/**/*.spec.js,/**/*.mock.js,node_modules/*,coverage/lcov-report/* -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info'
             }
           }
         stage("Build image") {
@@ -50,18 +55,11 @@ pipeline {
         stage ('Deploy') {
            steps {
                script{
-                // Create namespace if it doesn't exist 
-                sh("kubectl get ns ${namespace} || kubectl create ns ${namespace} ")
+                   //deploy to kubernetes cluster
+                   sh 'ansible-playbook -i /opt/ansible/hosts /opt/ansible/playbook.yml'
 
-                //Update the imagetag to the latest version 
-                ("sed -i.bak 's#gcr.io/${project}/${appName}:${imageVersion}#${imageTag}# ./etc/kubernetes/k8s/development/*.yaml ")
-
-                //Create or update resources 
-                sh("kubectl --namespace=${namespace} apply -f /etc/kubernetes/k8s/development/deployment.yaml") 
-                sh("kubectl --namespace=${namespace} apply -f /etc/kubernetes/k8s/development/service.yaml") 
-
-                //Grab the external Ip address of the service 
-                sh("echo http://`kubectl --namespace=${namespace} get service/${feSvcName} --output=json | jq -r .status.loadBalancer.ingress[0].ip'` > ${feSvcName} .")
+                   //grab external Ip
+                   //sh 'kubectl get services external-endpoint'
                }
            }
         }        
